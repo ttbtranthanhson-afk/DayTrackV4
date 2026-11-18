@@ -1,5 +1,6 @@
 import { ChevronLeft, Mail, Calendar, Briefcase, Heart, Target, Award, HeartPulse, Brain } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { UserAvatar } from '../components/UserAvatar';
 
 interface UserData {
   name: string;
@@ -25,13 +26,6 @@ interface ProfileProps {
 export function Profile({ userData, achievements }: ProfileProps) {
   const navigate = useNavigate();
 
-  const initials = userData.name
-    .split(' ')
-    .map(w => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
   return (
     <div className="min-h-screen bg-gray-50 pb-28">
       <div className="max-w-md mx-auto">
@@ -54,9 +48,11 @@ export function Profile({ userData, achievements }: ProfileProps) {
           <div className="absolute bottom-0 right-8 w-16 h-16 bg-white/10 rounded-full" />
 
           <div className="flex items-center gap-4 relative z-10">
-            <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-bold flex-shrink-0">
-              {initials}
-            </div>
+            <UserAvatar
+              name={userData.name}
+              editable
+              className="w-16 h-16 rounded-2xl bg-white/20 text-2xl font-bold"
+            />
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold truncate">{userData.name}</h2>
               <div className="flex items-center gap-1.5 mt-0.5">

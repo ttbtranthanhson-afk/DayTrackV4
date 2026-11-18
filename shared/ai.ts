@@ -113,7 +113,34 @@ export interface AiSection {
   items: string[];
 }
 
-export type AiAction = 'analyze' | 'suggest' | 'plan' | 'block';
+export type ReminderPersonalityId = 'friendly' | 'strict' | 'witty' | 'tsundere' | 'professional';
+
+export const REMINDER_PERSONALITY_IDS: ReminderPersonalityId[] = [
+  'friendly',
+  'strict',
+  'witty',
+  'tsundere',
+  'professional',
+];
+
+export type ReminderKind = 'upcoming' | 'started' | 'deadline' | 'morning' | 'summary' | 'test';
+
+export interface ReminderInput {
+  personality: ReminderPersonalityId;
+  eventTitle: string;
+  time: string;
+  kind: ReminderKind;
+  details?: string;
+  recent?: string[];
+  seed?: number;
+}
+
+export interface ReminderResult {
+  title: string;
+  body: string;
+}
+
+export type AiAction = 'analyze' | 'suggest' | 'plan' | 'block' | 'reminder';
 
 export interface BuiltPrompt {
   prompt: string;
@@ -280,8 +307,86 @@ function buildBlockPrompt(input: BlockAnalysisInput): BuiltPrompt {
   };
 }
 
+const REMINDER_PERSONAS: Record<ReminderPersonalityId, string> = {
+  friendly:
+    'Bạn là một trợ lý nhắc nhở ấm áp, tích cực và luôn khích lệ người dùng. ' +
+    'Giọng điệu gần gũi, dịu dàng, xưng "mình" và gọi người dùng là "bạn". ' +
+    'Luôn thể hiện sự tin tưởng và cổ vũ tinh thần.',
+  strict:
+    'Bạn là một huấn luyện viên quân đội nghiêm khắc và kỷ luật. ' +
+    'Câu ngắn, đanh thép, mang tính mệnh lệnh, thúc giục hoàn thành đúng hạn. ' +
+    'Không dài dòng, không an ủi vòng vo, nhưng tuyệt đối không xúc phạm hay đe dọa.',
+  witty:
+    'Bạn là một trợ lý vui tính, lầy lội và bắt trend nhẹ. ' +
+    'Dùng tiếng Việt tự nhiên, có thể dùng một chút ngôn ngữ Gen Z hoặc slang nhẹ nhàng, ' +
+    'pha trò hài hước để giảm căng thẳng nhưng vẫn truyền đạt rõ việc cần làm.',
+  tsundere:
+    'Bạn là một trợ lý tsundere: ngoài lạnh trong nóng. ' +
+    'Hơi cằn nhằn, tỏ ra không quan tâm, nhưng thực chất rất lo lắng cho tiến độ của người dùng. ' +
+    'Dùng những câu như "mình chỉ nhắc thôi", "không phải mình lo đâu", nhưng vẫn nhắc rõ giờ và việc cần làm.',
+  professional:
+    'Bạn là một thư ký cấp cao chuyên nghiệp. ' +
+    'Lịch sự, trang trọng, súc tích, dùng câu hoàn chỉnh và kính ngữ phù hợp. ' +
+    'Truyền đạt thông tin rõ ràng, đúng trọng tâm, không dùng tiếng lóng.',
+};
+
+const REMINDER_KIND_LABELS: Record<ReminderKind, string> = {
+  upcoming: 'sự kiện sắp bắt đầu (khoảng 5 phút nữa)',
+  started: 'sự kiện vừa bắt đầu',
+  deadline: 'sắp hết thời gian và còn nhiệm vụ chưa hoàn thành',
+  morning: 'nhắc nhở lịch trình buổi sáng',
+  summary: 'tổng kết cuối ngày',
+  test: 'thông báo xem thử',
+};
+
+export function isReminderPersonalityId(value: unknown): value is ReminderPersonalityId {
+  return REMINDER_PERSONALITY_IDS.includes(value as ReminderPersonalityId);
+}
+
+function buildReminderPrompt(input: ReminderInput): BuiltPrompt {
+  const recent = (input.recent ?? []).filter(Boolean).slice(-10);
+  const personality = isReminderPersonalityId(input.personality) ? input.personality : 'friendly';
+
+  return {
+    system:
+      REMINDER_PERSONAS[personality] +
+      ' Nhiệm vụ của bạn là viết nội dung thông báo nhắc nhở ngắn gọn cho ứng dụng quản lý lịch trình DayTrack. ' +
+      'Mỗi lần phải tạo ra một câu hoàn toàn mới, tự nhiên, không lặp lại máy móc. ' +
+      'Chỉ trả về JSON hợp lệ, không dùng markdown.',
+    json: true,
+    temperature: 1,
+    prompt: [
+      `Cá tính được chọn: ${personality}`,
+      `Loại nhắc nhở: ${REMINDER_KIND_LABELS[input.kind] ?? input.kind}`,
+      `Tên sự kiện/công việc: "${input.eventTitle}"`,
+      `Thời gian: "${input.time}"`,
+      ...(input.details ? [`Ngữ cảnh bổ sung: ${input.details}`] : []),
+      '',
+      'Yêu cầu bắt buộc:',
+      '- Viết một thông báo MỚI, tự nhiên, đúng cá tính đã chọn, bằng tiếng Việt.',
+      '- Nội dung phải nhắc rõ tên sự kiện/công việc và thời gian ở trên.',
+      '- Không được lặp lại hoặc diễn đạt gần giống bất kỳ câu nào trong danh sách gần đây.',
+      '- Độ dài: tiêu đề tối đa 6 từ; nội dung 1-2 câu, tối đa khoảng 240 ký tự.',
+      '- Không dùng markdown, không thêm lời giải thích ngoài JSON.',
+      '',
+      'Các thông báo đã dùng gần đây (TUYỆT ĐỐI KHÔNG lặp lại):',
+      recent.length ? recent.map(line => `- ${line}`).join('\n') : '- Chưa có',
+      '',
+      `Mã ngẫu nhiên để tạo biến thể mới: ${input.seed ?? Date.now()}`,
+      'Trả về DUY NHẤT JSON theo cấu trúc:',
+      '{"title":"tiêu đề ngắn đúng cá tính","body":"nội dung nhắc nhở đầy đủ"}',
+    ].join('\n'),
+  };
+}
+
 export function isAiAction(value: unknown): value is AiAction {
-  return value === 'analyze' || value === 'suggest' || value === 'plan' || value === 'block';
+  return (
+    value === 'analyze' ||
+    value === 'suggest' ||
+    value === 'plan' ||
+    value === 'block' ||
+    value === 'reminder'
+  );
 }
 
 export function buildPrompt(action: AiAction, input: unknown): BuiltPrompt {
@@ -294,6 +399,8 @@ export function buildPrompt(action: AiAction, input: unknown): BuiltPrompt {
       return buildPlanPrompt(input as PlanInput);
     case 'block':
       return buildBlockPrompt(input as BlockAnalysisInput);
+    case 'reminder':
+      return buildReminderPrompt(input as ReminderInput);
     default:
       throw new Error(`Hành động không hợp lệ: ${String(action)}`);
   }
@@ -369,6 +476,14 @@ function normalizeAnalysis(value: unknown): PlanAnalysis {
     methodSteps: toMethodSteps(raw.methodSteps, 6),
     healthTips: toList(raw.healthTips, 6),
     why: asString(raw.why),
+  };
+}
+
+export function normalizeReminder(value: unknown): ReminderResult {
+  const raw = (value ?? {}) as Partial<ReminderResult>;
+  return {
+    title: asString(raw.title).replace(/\s+/g, ' ').trim().slice(0, 80),
+    body: asString(raw.body).replace(/\s+/g, ' ').trim().slice(0, 320),
   };
 }
 

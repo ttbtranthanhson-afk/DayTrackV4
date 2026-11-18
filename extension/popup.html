@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DayTrack Focus Shield</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="head">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+      </div>
+      <div>
+        <h1>Focus Shield</h1>
+        <p class="sub">Đồng bộ Whitelist từ DayTrack</p>
+      </div>
+    </header>
+
+    <section id="status" class="status loading">
+      <span class="dot"></span>
+      <div>
+        <p id="status-title" class="status-title">Đang kiểm tra…</p>
+        <p id="status-sub" class="status-sub">Đọc cấu hình từ extension</p>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat">
+        <span id="site-count" class="stat-value">—</span>
+        <span class="stat-label">Web được phép</span>
+      </div>
+      <div class="stat">
+        <span id="app-count" class="stat-value">—</span>
+        <span class="stat-label">App được phép</span>
+      </div>
+    </section>
+
+    <section class="meta">
+      <div class="row">
+        <span>Chế độ</span>
+        <strong id="trigger-mode">—</strong>
+      </div>
+      <div class="row">
+        <span>Đồng bộ lần cuối</span>
+        <strong id="synced-at">—</strong>
+      </div>
+    </section>
+
+    <div class="actions">
+      <a id="manage" class="btn secondary" href="#">Quản lý Whitelist</a>
+      <a id="open-app" class="btn primary" href="#">Mở DayTrack</a>
+    </div>
+
+    <p class="footnote">
+      Mở DayTrack và bật chế độ Whitelist để extension tự động cập nhật.
+    </p>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

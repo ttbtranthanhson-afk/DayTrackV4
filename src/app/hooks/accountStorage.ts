@@ -13,8 +13,11 @@ export const ACCOUNT_DATA_KEYS = [
   'daytrack_achievement_stats',
   'daytrack_notification_settings',
   'daytrack_notification_log',
+  'daytrack_personality_reminder_history',
+  'daytrack_avatar',
   'daytrack_focus_blocks',
   'daytrack_custom_music',
+  'daytrack_focus_whitelist',
 ];
 
 function normalizeAccount(id: string): string {
@@ -131,12 +134,17 @@ export function refreshStores(): void {
 // ── account registry (email + password) ──
 
 const ACCOUNTS_KEY = 'daytrack_accounts';
+const ACCOUNT_RECORD_PREFIX = 'daytrack_account::';
 
 interface AccountRecord {
   email: string;
   name: string;
   password: string;
   createdAt: number;
+}
+
+function accountRecordKey(id: string): string {
+  return `${ACCOUNT_RECORD_PREFIX}${id}`;
 }
 
 function hashPassword(password: string): string {
@@ -170,6 +178,39 @@ function writeAccounts(accounts: Record<string, AccountRecord>) {
   }
 }
 
+function readAccountRecord(id: string): AccountRecord | null {
+  try {
+    const raw = localStorage.getItem(accountRecordKey(id));
+    if (raw) {
+      const parsed = JSON.parse(raw) as AccountRecord;
+      if (parsed && parsed.email === id && typeof parsed.password === 'string') {
+        return parsed;
+      }
+    }
+  } catch {
+    // fall through to the shared registry
+  }
+
+  const record = readAccounts()[id];
+  if (!record) return null;
+
+  try {
+    localStorage.setItem(accountRecordKey(id), JSON.stringify(record));
+  } catch {
+    // the shared registry is still enough to sign in
+  }
+  return record;
+}
+
+function writeAccountRecord(record: AccountRecord): boolean {
+  try {
+    localStorage.setItem(accountRecordKey(record.email), JSON.stringify(record));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
 }
@@ -196,26 +237,36 @@ export function isPasswordStrong(password: string): boolean {
 }
 
 export function accountExists(email: string): boolean {
-  return normalizeAccount(email) in readAccounts();
+  return readAccountRecord(normalizeAccount(email)) !== null;
 }
 
 export function registerAccount(email: string, name: string, password: string): boolean {
   const id = normalizeAccount(email);
+  if (readAccountRecord(id)) return false;
+
+  const record: AccountRecord = {
+    email: id,
+    name: name.trim(),
+    password: hashPassword(password),
+    createdAt: Date.now(),
+  };
+
   const accounts = readAccounts();
-  if (accounts[id]) return false;
-  accounts[id] = { email: id, name: name.trim(), password: hashPassword(password), createdAt: Date.now() };
+  accounts[id] = record;
   writeAccounts(accounts);
-  return true;
+  writeAccountRecord(record);
+
+  return readAccountRecord(id) !== null;
 }
 
 export type LoginResult = 'ok' | 'not_found' | 'bad_password';
 
 export function verifyAccount(email: string, password: string): LoginResult {
-  const account = readAccounts()[normalizeAccount(email)];
+  const account = readAccountRecord(normalizeAccount(email));
   if (!account) return 'not_found';
   return account.password === hashPassword(password) ? 'ok' : 'bad_password';
 }
 
 export function getAccountName(email: string): string | undefined {
-  return readAccounts()[normalizeAccount(email)]?.name;
+  return readAccountRecord(normalizeAccount(email))?.name;
 }

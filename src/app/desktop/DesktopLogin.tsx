@@ -131,7 +131,10 @@ export function DesktopLogin({ onLogin }: DesktopLoginProps) {
       setError('Email này đã được đăng ký. Hãy chuyển sang "Đăng nhập".');
       return;
     }
-    registerAccount(email, signupName.trim(), signupPassword);
+    if (!registerAccount(email, signupName.trim(), signupPassword)) {
+      setError('Không thể lưu tài khoản trên thiết bị này. Hãy kiểm tra dung lượng bộ nhớ trình duyệt rồi thử lại.');
+      return;
+    }
     onLogin({ name: signupName.trim(), email, age, job, habits, goals, health, mental });
   };
 

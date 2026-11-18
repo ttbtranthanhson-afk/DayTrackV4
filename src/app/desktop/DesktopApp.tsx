@@ -10,6 +10,7 @@ import { DesktopSettings } from './sections/DesktopSettings';
 import { DesktopProfile } from './sections/DesktopProfile';
 import { DesktopNotifications } from './sections/DesktopNotifications';
 import { DesktopAppearance } from './sections/DesktopAppearance';
+import { DesktopFocusWhitelist } from './sections/DesktopFocusWhitelist';
 import { DesktopAbout } from './sections/DesktopAbout';
 import { achievementGroupsData } from '../data/achievements';
 import type { Task } from '../hooks/useTasks';
@@ -57,6 +58,7 @@ export function DesktopApp({ userData, onLogout, tasks, onUpdateTasks, onAddTask
             <Route path="/profile" element={<DesktopProfile userData={userData} achievements={achievementGroupsData} />} />
             <Route path="/notifications" element={<DesktopNotifications />} />
             <Route path="/appearance" element={<DesktopAppearance />} />
+            <Route path="/focus-whitelist" element={<DesktopFocusWhitelist />} />
             <Route path="/about" element={<DesktopAbout />} />
           </Routes>
         </motion.div>

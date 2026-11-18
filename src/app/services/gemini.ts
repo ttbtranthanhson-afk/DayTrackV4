@@ -2,6 +2,7 @@ import {
   buildPrompt,
   normalizeBlockAnalysis,
   normalizePlan,
+  normalizeReminder,
   normalizeSuggestion,
   type AiAction,
   type AiSuggestion,
@@ -11,6 +12,8 @@ import {
   type BuiltPrompt,
   type PlanInput,
   type PlanResult,
+  type ReminderInput,
+  type ReminderResult,
   type SuggestBlockInput,
 } from '../../../shared/ai';
 import {
@@ -151,4 +154,9 @@ export function analyzeBlock(input: BlockAnalysisInput): Promise<BlockAnalysis> 
     const raw = await run('block', input);
     return normalizeBlockAnalysis(parseJson<unknown>(raw));
   });
+}
+
+export async function generatePersonalityReminder(input: ReminderInput): Promise<ReminderResult> {
+  const raw = await run('reminder', input);
+  return normalizeReminder(parseJson<unknown>(raw));
 }

@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { loadSettings, type NotificationSettings } from './notificationSettings';
-import { notify, parseClock, requestPermission } from './notificationService';
+import { formatClock, parseClock, requestPermission } from './notificationService';
+import { sendPersonalityReminder } from './personalityReminder';
 import { dayNameFromDate } from './scheduleData';
 import { launchFocus } from './focusLauncher';
 import { getAccountItem, setAccountItem } from './accountStorage';
@@ -25,6 +26,12 @@ function todayKey(date: Date): string {
 
 function weekdayIndex(date: Date): number {
   return date.getDay() === 0 ? 6 : date.getDay() - 1;
+}
+
+function clockFromMinutes(minutesOfDay: number): string {
+  const h = Math.floor(minutesOfDay / 60) % 24;
+  const m = minutesOfDay % 60;
+  return formatClock(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
 }
 
 function tsAt(minutesOfDay: number, now: Date): number {
@@ -159,7 +166,15 @@ export function useNotificationScheduler() {
             const k = `${key}:sch5:${block.id}`;
             if (!fired(k)) {
               mark(k);
-              notify('Nhắc lịch trình', `Lịch trình ${block.title} sẽ diễn ra sau 5 phút nữa`, settings);
+              sendPersonalityReminder({
+                settings,
+                fallbackTitle: 'Nhắc lịch trình',
+                fallbackBody: `Lịch trình ${block.title} sẽ diễn ra sau 5 phút nữa`,
+                eventTitle: block.title,
+                time: clockFromMinutes(block.start),
+                kind: 'upcoming',
+                details: 'Sự kiện sẽ bắt đầu sau khoảng 5 phút nữa.',
+              });
             }
           }
 
@@ -168,9 +183,18 @@ export function useNotificationScheduler() {
             if (!fired(k)) {
               mark(k);
               const seconds = Math.max((block.end - block.start) * 60, 25 * 60);
-              notify('Lịch trình đã bắt đầu', `Lịch trình ${block.title} đã bắt đầu`, settings, () => {
-                navigate('/focus');
-                launchFocus(seconds);
+              sendPersonalityReminder({
+                settings,
+                fallbackTitle: 'Lịch trình đã bắt đầu',
+                fallbackBody: `Lịch trình ${block.title} đã bắt đầu`,
+                eventTitle: block.title,
+                time: clockFromMinutes(block.start),
+                kind: 'started',
+                details: 'Sự kiện vừa bắt đầu.',
+                onClick: () => {
+                  navigate('/focus');
+                  launchFocus(seconds);
+                },
               });
             }
           }
@@ -180,7 +204,15 @@ export function useNotificationScheduler() {
               const k = `${key}:dld:${block.id}`;
               if (!fired(k) && incompleteInSchedule(block.title)) {
                 mark(k);
-                notify('Nhắc hạn nhiệm vụ', `Còn nhiệm vụ chưa hoàn thành trong lịch trình ${block.title}`, settings);
+                sendPersonalityReminder({
+                  settings,
+                  fallbackTitle: 'Nhắc hạn nhiệm vụ',
+                  fallbackBody: `Còn nhiệm vụ chưa hoàn thành trong lịch trình ${block.title}`,
+                  eventTitle: block.title,
+                  time: clockFromMinutes(block.end),
+                  kind: 'deadline',
+                  details: 'Còn nhiệm vụ chưa hoàn thành và thời gian sắp hết.',
+                });
               }
             }
           }
@@ -197,7 +229,15 @@ export function useNotificationScheduler() {
               const body = names.length
                 ? `Hôm nay bạn có ${names.length} lịch trình: ${names.join(', ')}`
                 : 'Hôm nay bạn không có lịch trình nào.';
-              notify('Lịch trình hôm nay', body, settings);
+              sendPersonalityReminder({
+                settings,
+                fallbackTitle: 'Lịch trình hôm nay',
+                fallbackBody: body,
+                eventTitle: 'Lịch trình hôm nay',
+                time: formatClock(settings.times.morning),
+                kind: 'morning',
+                details: body,
+              });
             }
           }
         }
@@ -212,11 +252,19 @@ export function useNotificationScheduler() {
             if (!fired(k)) {
               mark(k);
               const allEnded = blocks.length === 0 || blocks.every(b => nowMs >= tsAt(b.end, now));
-              if (incompleteToday === 0 && allEnded) {
-                notify('Tổng kết ngày', 'Đã hoàn thành ngày 😊', settings);
-              } else {
-                notify('Tổng kết ngày', 'Còn nhiệm vụ chưa hoàn thành', settings);
-              }
+              const summaryBody =
+                incompleteToday === 0 && allEnded
+                  ? 'Đã hoàn thành ngày 😊'
+                  : 'Còn nhiệm vụ chưa hoàn thành';
+              sendPersonalityReminder({
+                settings,
+                fallbackTitle: 'Tổng kết ngày',
+                fallbackBody: summaryBody,
+                eventTitle: 'Tổng kết ngày',
+                time: formatClock(settings.times.evening),
+                kind: 'summary',
+                details: summaryBody,
+              });
             }
           }
         }

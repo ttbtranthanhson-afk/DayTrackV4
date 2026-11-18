@@ -1,4 +1,8 @@
 import { getAccountItem, setAccountItem } from './accountStorage';
+import {
+  isReminderPersonalityId,
+  type ReminderPersonalityId,
+} from '../../../shared/ai';
 
 export interface NotificationSettings {
   reminders: {
@@ -15,6 +19,10 @@ export interface NotificationSettings {
     morning: string;
     evening: string;
   };
+  personality: {
+    enabled: boolean;
+    id: ReminderPersonalityId;
+  };
 }
 
 export const STORAGE_KEY = 'daytrack_notification_settings';
@@ -23,6 +31,7 @@ export const defaultSettings: NotificationSettings = {
   reminders: { schedule: true, deadline: true, summary: true },
   sound: { sound: true, vibrate: false, silent: false },
   times: { morning: '08:00', evening: '21:00' },
+  personality: { enabled: false, id: 'friendly' },
 };
 
 export function loadSettings(): NotificationSettings {
@@ -34,12 +43,19 @@ export function loadSettings(): NotificationSettings {
         reminders: { ...defaultSettings.reminders, ...parsed.reminders },
         sound: { ...defaultSettings.sound, ...parsed.sound },
         times: { ...defaultSettings.times, ...parsed.times },
+        personality: {
+          ...defaultSettings.personality,
+          ...parsed.personality,
+          id: isReminderPersonalityId(parsed.personality?.id)
+            ? parsed.personality.id
+            : defaultSettings.personality.id,
+        },
       };
     }
   } catch {
     // ignore malformed storage
   }
-  return { ...defaultSettings };
+  return { ...defaultSettings, personality: { ...defaultSettings.personality } };
 }
 
 export function saveSettings(settings: NotificationSettings) {

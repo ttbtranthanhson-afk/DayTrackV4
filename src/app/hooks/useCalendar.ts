@@ -25,6 +25,10 @@ export const monthNames = [
   'Thg 7','Thg 8','Thg 9','Thg 10','Thg 11','Thg 12',
 ];
 
+function daysInMonthOf(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
+}
+
 interface UseCalendarProps {
   onAddTasks?: AddTasksFromSchedule;
 }
@@ -33,7 +37,7 @@ export function useCalendar({ onAddTasks }: UseCalendarProps = {}) {
   const today = new Date();
 
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear] = useState(today.getFullYear());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [lockedDays, setLockedDays] = useState<Set<number>>(new Set([15, 20]));
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -126,6 +130,21 @@ export function useCalendar({ onAddTasks }: UseCalendarProps = {}) {
     deleteCalendarBlock(dateKey(currentYear, currentMonth, selectedDay), id);
   };
 
+  const goToMonth = (delta: number) => {
+    const next = new Date(currentYear, currentMonth + delta, 1);
+    const year = next.getFullYear();
+    const month = next.getMonth();
+    setCurrentYear(year);
+    setCurrentMonth(month);
+    setSelectedDay(day => Math.min(day, daysInMonthOf(year, month)));
+  };
+
+  const goToYear = (delta: number) => {
+    const year = currentYear + delta;
+    setCurrentYear(year);
+    setSelectedDay(day => Math.min(day, daysInMonthOf(year, currentMonth)));
+  };
+
   useEffect(() => {
     const handler = () => openCreateSchedule();
     window.addEventListener('nav:quick-action', handler);
@@ -140,6 +159,8 @@ export function useCalendar({ onAddTasks }: UseCalendarProps = {}) {
     currentMonth,
     setCurrentMonth,
     currentYear,
+    goToMonth,
+    goToYear,
     selectedDay,
     setSelectedDay,
     lockedDays,

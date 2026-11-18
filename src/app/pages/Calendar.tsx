@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Lock, Unlock, Trash2, Pencil, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Lock, Unlock, Trash2, Pencil, Search } from 'lucide-react';
 import { CreateScheduleModal } from '../components/CreateScheduleModal';
 import { BusyHoursModal } from '../components/BusyHoursModal';
 import { AiPlannerModal } from '../components/AiPlannerModal';
@@ -13,8 +13,9 @@ interface CalendarProps {
 export function Calendar({ onAddTasks }: CalendarProps) {
   const {
     currentMonth,
-    setCurrentMonth,
     currentYear,
+    goToMonth,
+    goToYear,
     selectedDay,
     setSelectedDay,
     isModalOpen,
@@ -49,15 +50,26 @@ export function Calendar({ onAddTasks }: CalendarProps) {
         {/* Header */}
         <div className="px-5 pt-12 pb-2">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900">{monthNames[currentMonth]}</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {monthNames[currentMonth]}{' '}
+              <span className="text-lg font-semibold text-gray-400">{currentYear}</span>
+            </h1>
             <div className="flex gap-1">
-              <button onClick={() => setCurrentMonth(m => Math.max(0, m - 1))}
+              <button onClick={() => goToYear(-1)} title="Năm trước" aria-label="Năm trước"
+                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
+                <ChevronsLeft className="w-4 h-4 text-gray-400" />
+              </button>
+              <button onClick={() => goToMonth(-1)} title="Tháng trước" aria-label="Tháng trước"
                 className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
                 <ChevronLeft className="w-5 h-5 text-gray-500" />
               </button>
-              <button onClick={() => setCurrentMonth(m => Math.min(11, m + 1))}
+              <button onClick={() => goToMonth(1)} title="Tháng sau" aria-label="Tháng sau"
                 className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
                 <ChevronRight className="w-5 h-5 text-gray-500" />
+              </button>
+              <button onClick={() => goToYear(1)} title="Năm sau" aria-label="Năm sau"
+                className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
+                <ChevronsRight className="w-4 h-4 text-gray-400" />
               </button>
             </div>
           </div>

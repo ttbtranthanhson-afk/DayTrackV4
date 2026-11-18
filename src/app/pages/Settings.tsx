@@ -1,5 +1,6 @@
-import { ChevronRight, User, Bell, Palette, Info, LogOut, Calendar, Briefcase, Target, Mail, GraduationCap } from 'lucide-react';
-import { LogoMini } from '../components/Logo';
+import { ChevronRight, User, Bell, Palette, Info, LogOut, Calendar, Briefcase, Target, Mail, GraduationCap, ShieldCheck } from 'lucide-react';
+import { PersonalityReminderSettings } from '../components/PersonalityReminderSettings';
+import { UserAvatar } from '../components/UserAvatar';
 import { useNavigate } from 'react-router';
 import { startTutorial } from '../tutorial/tutorialStore';
 
@@ -30,6 +31,7 @@ const settingsGroups = [
     title: 'Ứng dụng',
     items: [
       { icon: Bell, label: 'Thông báo', sub: 'Nhắc nhở & cảnh báo', color: 'bg-purple-500', path: '/notifications' },
+      { icon: ShieldCheck, label: 'Tập trung & Whitelist', sub: 'Khóa app/web ngoài danh sách', color: 'bg-emerald-500', path: '/focus-whitelist' },
       { icon: Palette, label: 'Giao diện', sub: 'Màu sắc & font chữ', color: 'bg-pink-500', path: '/appearance' },
     ],
   },
@@ -49,13 +51,6 @@ export function Settings({ userData, onLogout }: SettingsProps) {
     navigate('/');
   };
 
-  const initials = userData.name
-    .split(' ')
-    .map(w => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
   return (
     <div className="min-h-screen bg-gray-50 pb-28">
       <div className="max-w-md mx-auto">
@@ -70,9 +65,11 @@ export function Settings({ userData, onLogout }: SettingsProps) {
           <div className="absolute bottom-0 right-8 w-16 h-16 bg-white/10 rounded-full" />
 
           <div className="flex items-center gap-4 relative z-10">
-            <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-bold flex-shrink-0">
-              {initials || <LogoMini size={32} />}
-            </div>
+            <UserAvatar
+              name={userData.name}
+              editable
+              className="w-16 h-16 rounded-2xl bg-white/20 text-2xl font-bold"
+            />
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold truncate">{userData.name}</h2>
               <div className="flex items-center gap-1.5 mt-0.5">
@@ -136,6 +133,14 @@ export function Settings({ userData, onLogout }: SettingsProps) {
               </div>
             </div>
           ))}
+
+          {/* AI personality reminders */}
+          <div>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">
+              AI & Cá nhân hóa
+            </p>
+            <PersonalityReminderSettings />
+          </div>
 
           {/* Replay tutorial */}
           <div>

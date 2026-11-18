@@ -5,6 +5,8 @@ import { useNotificationScheduler } from './hooks/useNotificationScheduler';
 import { useAppTheme } from './hooks/useAppTheme';
 import { BottomNav } from './components/BottomNav';
 import { FocusBubble } from './components/FocusBubble';
+import { FocusWhitelistBanner } from './components/FocusWhitelistBanner';
+import { FocusWhitelistGuard } from './components/FocusWhitelistGuard';
 import { useIsDesktop } from './desktop/useIsDesktop';
 import { DesktopApp } from './desktop/DesktopApp';
 import { DesktopLogin } from './desktop/DesktopLogin';
@@ -18,6 +20,7 @@ import { Settings } from './pages/Settings';
 import { Profile } from './pages/Profile';
 import { Notifications } from './pages/Notifications';
 import { Appearance } from './pages/Appearance';
+import { FocusWhitelist } from './pages/FocusWhitelist';
 import { About } from './pages/About';
 import { achievementGroupsData } from './data/achievements';
 import { syncAchievementsWithTasks } from './hooks/achievementStore';
@@ -203,6 +206,7 @@ function AppContent() {
           onUpdateTasks={handleUpdateTasks}
           onAddTasks={handleAddTasksFromSchedule}
         />
+        <FocusWhitelistGuard />
         <FocusBubble />
         <TutorialLayer enabled={isLoggedIn} />
         <Toaster position="top-center" richColors />
@@ -212,6 +216,7 @@ function AppContent() {
 
   return (
     <div className="size-full">
+      <FocusWhitelistBanner />
       <Routes>
         <Route path="/" element={<Navigate to="/timetable" replace />} />
         <Route path="/timetable" element={<Timetable onAddTasks={handleAddTasksFromSchedule} />} />
@@ -223,9 +228,11 @@ function AppContent() {
         <Route path="/profile" element={<Profile userData={userData} achievements={achievementGroupsData} />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/appearance" element={<Appearance />} />
+        <Route path="/focus-whitelist" element={<FocusWhitelist />} />
         <Route path="/about" element={<About />} />
       </Routes>
       {showBottomNav && <BottomNav />}
+      <FocusWhitelistGuard />
       <FocusBubble />
       <TutorialLayer enabled={isLoggedIn} />
       <Toaster position="top-center" richColors />
