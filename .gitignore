@@ -9,5 +9,3 @@ dist/
 !.env.example
 .vite/
 __pycache__/
-docs/assets/*.js
-docs/assets/*.css

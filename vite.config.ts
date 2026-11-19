@@ -18,11 +18,11 @@ function figmaAssetResolver() {
 
 export default defineConfig(({ command }) => {
   // Vercel builds at the domain root into dist/; GitHub Pages serves from
-  // /DayTrackV3/ and commits the build into docs/.
+  // /DayTrackV4/ and commits the build into docs/.
   const isVercel = Boolean(process.env.VERCEL);
   return {
-    // GitHub Pages project site is served from /DayTrackV3/. Keep dev at root.
-    base: command === 'build' ? (isVercel ? '/' : '/DayTrackV3/') : '/',
+    // GitHub Pages project site is served from /DayTrackV4/. Keep dev at root.
+    base: command === 'build' ? (isVercel ? '/' : '/DayTrackV4/') : '/',
     plugins: [
       figmaAssetResolver(),
       // The React and Tailwind plugins are both required for Make, even if
