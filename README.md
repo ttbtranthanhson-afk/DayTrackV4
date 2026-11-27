@@ -31,4 +31,10 @@
   >
   > Quan trọng: không đặt `VITE_GEMINI_API_KEY` trên môi trường production, nếu không key sẽ bị nhúng vào bundle phía client.
 
-  
+  ## PWA
+
+  Khi build, `vite-plugin-pwa` tạo `manifest.webmanifest` và `sw.js`, tự đăng ký service worker và lưu sẵn giao diện (HTML/CSS/JS/icon) để mở offline. Cấu hình tự theo `base` nên chạy đúng cả trên Vercel (`/`) và GitHub Pages (`/DayTrackV4/`).
+
+  - Icon đặt tại `public/icons/` (192, 512, maskable, apple-touch).
+  - Sau khi deploy, mở trang bằng điện thoại → Chrome/Edge hiện nút cài đặt app; Safari dùng **Share → Add to Home Screen**.
+  - Audio (~64 MB) không nằm trong danh sách precache để cài đặt nhanh; các tính năng dùng mạng (AI, audio) vẫn cần kết nối.
